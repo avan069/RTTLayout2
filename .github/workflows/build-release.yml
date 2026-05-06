@@ -1,0 +1,70 @@
+name: Build Release Zip
+
+on:
+  push:
+    branches:
+      - main
+      - master
+    tags:
+      - "v*"
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-windows-exe:
+    name: Build Windows EXE
+    runs-on: windows-latest
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+          python -m pip install pyinstaller
+
+      - name: Run tests
+        run: |
+          python -m py_compile RTTLayout2.py rttlayout2/app.py rttlayout2/model.py rttlayout2/export.py tests/test_model.py
+          python -m unittest discover -s tests
+
+      - name: Build executable
+        run: |
+          python -m PyInstaller --clean --noconsole --onefile --name RTTLayout2 RTTLayout2.py
+
+      - name: Create release folder
+        shell: pwsh
+        run: |
+          $releaseDir = "release/RTTLayout2"
+          New-Item -ItemType Directory -Force -Path $releaseDir | Out-Null
+          Copy-Item "dist/RTTLayout2.exe" "$releaseDir/RTTLayout2.exe"
+          Copy-Item "README.md" "$releaseDir/README.md"
+          Copy-Item "RELEASE_NOTES.md" "$releaseDir/RELEASE_NOTES.md"
+
+      - name: Package release zip
+        shell: pwsh
+        run: |
+          Compress-Archive -Path "release/RTTLayout2/*" -DestinationPath "release/RTTLayout2-windows.zip" -Force
+
+      - name: Upload release zip
+        uses: actions/upload-artifact@v4
+        with:
+          name: RTTLayout2-windows
+          path: release/RTTLayout2-windows.zip
+          if-no-files-found: error
+
+      - name: Publish GitHub release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: release/RTTLayout2-windows.zip
