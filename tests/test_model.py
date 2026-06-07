@@ -38,6 +38,23 @@ class ModelTests(unittest.TestCase):
         self.assertIn("boresighty 0.375;", rendered)
         self.assertEqual(rendered.count("mfdleft"), 1)
 
+    def test_resize_rtt_target_scales_surface_coordinates(self):
+        doc = CockpitFile.load(F15_PATH)
+        hud = next(s for s in doc.surfaces if s.name == "hud")
+        original_quad = list(hud.quad)
+
+        doc.resize_rtt_target(2400, 600)
+
+        self.assertEqual((doc.rtt_width, doc.rtt_height), (2400, 600))
+        self.assertEqual(hud.rect(), (0, 0, 1120, 280))
+        self.assertEqual(hud.quad, original_quad)
+        self.assertIn("rttTarget 2400 600;", doc.render())
+
+    def test_resize_rtt_target_rejects_nonpositive_dimensions(self):
+        doc = CockpitFile.load(F15_PATH)
+        with self.assertRaises(ValueError):
+            doc.resize_rtt_target(0, 1200)
+
     def test_export_png(self):
         doc = CockpitFile.load(F15_PATH)
         with tempfile.TemporaryDirectory(dir=TEST_DIR) as tmp:

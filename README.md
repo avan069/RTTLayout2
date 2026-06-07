@@ -11,6 +11,7 @@ RTTLayout2 is a Python/Tkinter editor for Falcon BMS `3dCkpit.dat` RTT texture c
 - Lets surfaces be selected, dragged, resized from corner handles, snapped to the RTT canvas edge, and edited by pixel fields.
 - Supports optional corner resize handles, locked-ratio resizing, and exact 1:1 canvas sizing.
 - Provides slider and mousewheel canvas zoom for inspecting native-size layouts.
+- Changes the `rttTarget` texture resolution and proportionally scales all RTT surface rectangles.
 - Draws precise 1px inclusive borders so the preview matches the declared pixel extent.
 - Allows surfaces to be moved outside the RTT target while editing, but blocks export until they are brought back inside.
 - Snaps only to the RTT canvas edge when `Snap to Canvas` is enabled.

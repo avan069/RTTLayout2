@@ -112,7 +112,8 @@ class RttLayoutApp(tk.Tk):
         ttk.Scale(zoom_row, from_=0.25, to=4.0, variable=self.zoom_var, command=lambda _value: self.redraw()).grid(row=0, column=1, sticky="ew", padx=(8, 0))
         zoom_row.columnconfigure(1, weight=1)
         ttk.Button(options, text="Set Actual Size", command=self.set_actual_size).grid(row=7, column=0, sticky="ew", pady=(8, 0))
-        ttk.Button(options, text="Export PNG", command=self.ask_export).grid(row=8, column=0, sticky="ew", pady=(6, 0))
+        ttk.Button(options, text="Change RTT resolution", command=self.ask_change_rtt_resolution).grid(row=8, column=0, sticky="ew", pady=(6, 0))
+        ttk.Button(options, text="Export PNG", command=self.ask_export).grid(row=9, column=0, sticky="ew", pady=(6, 0))
 
         main = ttk.Frame(self.texture_tab, padding=(0, 10, 10, 10))
         main.grid(row=0, column=1, sticky="nsew")
@@ -304,6 +305,20 @@ class RttLayoutApp(tk.Tk):
                 messagebox.showerror("Export failed", str(exc))
                 return
             self.update_status(f"Exported {width}x{height} PNG.")
+
+    def ask_change_rtt_resolution(self) -> None:
+        dialog = ResolutionDialog(self, self.doc.rtt_width, self.doc.rtt_height)
+        self.wait_window(dialog)
+        if not dialog.result:
+            return
+        width, height = dialog.result
+        if (width, height) == (self.doc.rtt_width, self.doc.rtt_height):
+            return
+        self.doc.resize_rtt_target(width, height)
+        self.update_entries()
+        self.redraw()
+        self.update_status(f"Changed RTT resolution to {width}x{height}.")
+        self.refresh_secondary_tabs()
 
     def on_list_select(self, _event: tk.Event) -> None:
         selection = self.surface_list.curselection()
@@ -817,7 +832,7 @@ class RttLayoutApp(tk.Tk):
         self.set_text(self.line_numbers, numbers)
 
     def apply_dat_preview_tags(self, lines: list[str]) -> None:
-        editable_names = {surface.name.lower() for surface in self.doc.surfaces}
+        editable_names = {"rtttarget", *(surface.name.lower() for surface in self.doc.surfaces)}
         self.dat_preview.configure(state="normal")
         self.dat_preview.tag_remove("editable", "1.0", tk.END)
         self.dat_preview.tag_remove("readonly", "1.0", tk.END)
@@ -890,6 +905,49 @@ class ExportDialog(tk.Toplevel):
             width = max(1, int(float(self.width_var.get())))
             height = max(1, int(float(self.height_var.get())))
         except ValueError:
+            return
+        self.result = (width, height)
+        self.destroy()
+
+
+class ResolutionDialog(tk.Toplevel):
+    def __init__(self, parent: tk.Tk, width: int, height: int) -> None:
+        super().__init__(parent)
+        self.title("Change RTT Resolution")
+        self.resizable(False, False)
+        self.result: tuple[int, int] | None = None
+        self.width_var = tk.StringVar(value=str(width))
+        self.height_var = tk.StringVar(value=str(height))
+
+        frame = ttk.Frame(self, padding=14)
+        frame.grid(sticky="nsew")
+        ttk.Label(frame, text="Width (px)").grid(row=0, column=0, sticky="w")
+        width_entry = ttk.Entry(frame, textvariable=self.width_var, width=12)
+        width_entry.grid(row=0, column=1, padx=(8, 0))
+        ttk.Label(frame, text="Height (px)").grid(row=1, column=0, sticky="w", pady=(6, 0))
+        height_entry = ttk.Entry(frame, textvariable=self.height_var, width=12)
+        height_entry.grid(row=1, column=1, padx=(8, 0), pady=(6, 0))
+
+        buttons = ttk.Frame(frame)
+        buttons.grid(row=2, column=0, columnspan=2, sticky="e", pady=(12, 0))
+        ttk.Button(buttons, text="Cancel", command=self.destroy).grid(row=0, column=0, padx=(0, 6))
+        ttk.Button(buttons, text="Change", command=self.accept).grid(row=0, column=1)
+
+        width_entry.bind("<Return>", lambda _event: self.accept())
+        height_entry.bind("<Return>", lambda _event: self.accept())
+        width_entry.focus_set()
+        self.transient(parent)
+        self.grab_set()
+
+    def accept(self) -> None:
+        try:
+            width = int(self.width_var.get())
+            height = int(self.height_var.get())
+        except ValueError:
+            messagebox.showerror("Invalid resolution", "Width and height must be whole pixel values.", parent=self)
+            return
+        if width < 1 or height < 1:
+            messagebox.showerror("Invalid resolution", "Width and height must be greater than zero.", parent=self)
             return
         self.result = (width, height)
         self.destroy()

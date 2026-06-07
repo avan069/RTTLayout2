@@ -139,6 +139,27 @@ class CockpitFile:
                     names.add(b.name)
         return names
 
+    def resize_rtt_target(self, width: int, height: int) -> None:
+        width = int(width)
+        height = int(height)
+        if width < 1 or height < 1:
+            raise ValueError("RTT target dimensions must be positive.")
+
+        scale_x = width / max(1, self.rtt_width)
+        scale_y = height / max(1, self.rtt_height)
+        for surface in self.surfaces:
+            left = round(surface.left * scale_x)
+            top = round(surface.top * scale_y)
+            right = round(surface.right * scale_x)
+            bottom = round(surface.bottom * scale_y)
+            surface.left = left
+            surface.top = top
+            surface.right = max(left + 1, right)
+            surface.bottom = max(top + 1, bottom)
+
+        self.rtt_width = width
+        self.rtt_height = height
+
     def save(self, path: str | Path | None = None) -> Path:
         if path is None:
             if self.path is None:
