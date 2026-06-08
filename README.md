@@ -1,26 +1,21 @@
 # RTTLayout2
 
-RTTLayout2 is a Python/Tkinter editor for Falcon BMS `3dCkpit.dat` RTT texture coordinate blocks.
+RTTLayout2 is an editor for Falcon BMS `3dCkpit.dat` RTT texture coordinate blocks.
 
-## Current MVP
+## What it does
 
-- Opens a required `3dCkpit.dat`.
-- Parses `rttTarget` and RTT surface lines such as `hud`, `pfl`, `ded`, `rwr`, `mfdleft`, `mfdright`, and `hms`.
-- Shows a resizable RTT canvas at the real target aspect ratio.
-- Uses tabs for texture definitions, HUD 3D definition metrics/diagrams, and a read-only `3dCkpit.dat` output preview.
-- Lets surfaces be selected, dragged, resized from corner handles, snapped to the RTT canvas edge, and edited by pixel fields.
-- Supports optional corner resize handles, locked-ratio resizing, and exact 1:1 canvas sizing.
-- Provides slider and mousewheel canvas zoom for inspecting native-size layouts.
+- Opens a `3dCkpit.dat` and display/edit RTT (Real-Time Texture) layout.
+- For any RTT surface: select, drag, resize from corner handles, snap to the canvas edge, or manually edit dimensions.
+- Detect and display collisions or out-of-bounds surfaces.
+- Pan and zoom the canvas with middle mouse.
 - Changes the `rttTarget` texture resolution and proportionally scales all RTT surface rectangles.
 - Draws precise 1px inclusive borders so the preview matches the declared pixel extent.
+- Can draw internal grids inside each surface to guide modelers/coders in accurate symbology placement.
 - Allows surfaces to be moved outside the RTT target while editing, but blocks export until they are brought back inside.
-- Snaps only to the RTT canvas edge when `Snap to Canvas` is enabled.
 - Can prevent overlap while editing when `Allow Overlap` is unchecked.
-- Can draw internal 0.1 interval grids inside each surface in the editor and exported PNG.
-- Displays the active definition values in real time.
-- Warns when enabled surfaces overlap or fall outside the RTT target, and colors overlapping surfaces red.
-- Saves a clean, aligned RTT block back to `3dCkpit.dat`.
-- Exports the layout as PNG at native, 1k, 2k, 4k, 8k, or custom resolution.
+- Saves a clean, aligned RTT block back to `3dCkpit.dat` if desired
+- Exports the layout as PNG at native, 1k, 2k, 4k, 8k, or custom resolution for accurate UV map application.
+- View HUD projection metrics and adjust multiple parameters to achieve accurate HUD field of view
 
 ## Run
 
@@ -29,7 +24,7 @@ python RTTLayout2.py
 python RTTLayout2.py "C:\Falcon BMS 4.38 (Internal)\Data\Art\CkptArt\F-15C\3dCkpit.dat"
 ```
 
-The app only needs Python with Tkinter and Pillow. Tkinter is included with most Windows Python installs.
+The app only needs Python with Tkinter and Pillow.
 
 ## Package As A Windows EXE
 
@@ -39,7 +34,5 @@ python -m PyInstaller --noconsole --onefile --name RTTLayout2 RTTLayout2.py
 ```
 
 ## Next Extension Points
-
-- HUD quad metrics include editable TFOV, center angle, and depth fields that update the HUD 3D quad symmetrically around the current center.
 - A future `3dButtons.dat` editor should get its own parser/model module and a new UI tab, reusing the same validation and export patterns.
-- Soundtable support should be implemented as a separate resolver service so button editing can remain independent of audio playback.
+- Sound table support should be implemented as a separate resolver service so button editing can remain independent of audio playback.
